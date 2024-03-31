@@ -21,29 +21,17 @@ namespace InMemoryApp.Web.Controllers
         [HttpPost]
         public IActionResult Set()
         {
-            // Cache Kontrol 1. Yol
-            //if (String.IsNullOrEmpty(_memoryCache.Get<string>("Zaman")))
-            //{
-            //    _memoryCache.Set<string>("Zaman", DateTime.Now.ToString());
-            //}
+            MemoryCacheEntryOptions cacheOptions = new MemoryCacheEntryOptions();
 
-            // 2. yol
-            if (!_memoryCache.TryGetValue("Zaman", out string zamanCache))
-            {
-                _memoryCache.Set<string>("Zaman", DateTime.Now.ToString());
-            }
+            // Cache ömrünü belirliyoruz.
+            cacheOptions.AbsoluteExpiration = DateTime.Now.AddMinutes(1);
 
-            try
-            {
-                _memoryCache.Set<string>("Zaman", DateTime.Now.ToString());
+            // 10 saniye içinde veri çekilmezse silinir çekilirse 10 saniye eklenir.
+            cacheOptions.SlidingExpiration = TimeSpan.FromSeconds(10);
 
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                // Cache'e yazma işlemi başarısız olduysa uygun bir hata mesajı döndürün.
-                return StatusCode(500, "Zaman verisi cache'e yazılamadı. Hata: " + ex.Message);
-            }
+            _memoryCache.Set<string>("Zaman", DateTime.Now.ToString(), cacheOptions);
+
+            return Ok();
         }
 
         /// <summary>
@@ -53,23 +41,15 @@ namespace InMemoryApp.Web.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-            // cache almaya çalışır yoksa oluşturur (GetOrCreate)
-            _memoryCache.GetOrCreate<string>("zaman", entry =>
+            if (_memoryCache.TryGetValue("Zaman", out string zamanCache))
             {
-                return DateTime.Now.ToString();
-            });
-            _memoryCache.Remove("Zaman");
-
-            var zaman = _memoryCache.Get<string>("Zaman");
-
-            if (zaman == null)
+                return Ok(zamanCache);
+            }
+            else
             {
                 return NotFound("Zaman verisi bulunamadı.");
             }
-
-            return Ok(zaman);
         }
-
 
     }
 }
