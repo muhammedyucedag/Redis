@@ -30,6 +30,9 @@ namespace InMemoryApp.Web.Controllers
             // 10 saniye içinde veri çekilmezse silinir çekilirse 10 saniye eklenir.
             cacheOptions.SlidingExpiration = TimeSpan.FromSeconds(10);
 
+            // Redis'te, önbellek önceliği (CacheItemPriority) yerine anahtarlar için zamanlanmış son kullanma süreleri belirlenir.
+            cacheOptions.Priority = CacheItemPriority.High;
+
             _memoryCache.Set<string>("Zaman", DateTime.Now.ToString(), cacheOptions);
 
             return Ok();
