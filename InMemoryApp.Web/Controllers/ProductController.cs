@@ -17,8 +17,9 @@ namespace InMemoryApp.Web.Controllers
         /// <summary>
         /// Zaman verisini önbelleğe ayarlar.
         /// </summary>
-        [ActionName(nameof(Set))]
-        [HttpPost]
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPost("{CacheSet}")]
         public IActionResult Set()
         {
             MemoryCacheEntryOptions cacheOptions = new MemoryCacheEntryOptions();
@@ -34,11 +35,12 @@ namespace InMemoryApp.Web.Controllers
             return Ok();
         }
 
-        /// <summary>
+        /// /// <summary>
         /// Zaman verisini önbellekten getirir.
         /// </summary>
-        [ActionName(nameof(Get))]
-        [HttpGet]
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("{CacheGet}")]
         public IActionResult Get()
         {
             if (_memoryCache.TryGetValue("Zaman", out string zamanCache))
