@@ -19,19 +19,25 @@ namespace InMemoryApp.Web.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPost("{CacheSet}")]
+        [HttpPost()]
         public IActionResult Set()
         {
             MemoryCacheEntryOptions cacheOptions = new MemoryCacheEntryOptions();
 
             // Cache ömrünü belirliyoruz.
-            cacheOptions.AbsoluteExpiration = DateTime.Now.AddMinutes(1);
+            cacheOptions.AbsoluteExpiration = DateTime.Now.AddSeconds(10);
 
             // 10 saniye içinde veri çekilmezse silinir çekilirse 10 saniye eklenir.
-            cacheOptions.SlidingExpiration = TimeSpan.FromSeconds(10);
+            // cacheOptions.SlidingExpiration = TimeSpan.FromSeconds(10);
 
             // Redis'te, önbellek önceliği (CacheItemPriority) yerine anahtarlar için zamanlanmış son kullanma süreleri belirlenir.
             cacheOptions.Priority = CacheItemPriority.High;
+
+            // RegisterPostEvictionCallback metodu, bir bellek önbelleği öğesi önbellekten kaldırıldığında belirli bir geri çağrıyı tetiklemek için kullanılır.
+            cacheOptions.RegisterPostEvictionCallback((key, value, reason, state) =>
+            {
+                _memoryCache.Set("callback", $"{key}->{value} => sebep:{reason}");
+            });
 
             _memoryCache.Set<string>("Zaman", DateTime.Now.ToString(), cacheOptions);
 
@@ -43,17 +49,14 @@ namespace InMemoryApp.Web.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet("{CacheGet}")]
+        [HttpGet()]
         public IActionResult Get()
         {
-            if (_memoryCache.TryGetValue("Zaman", out string zamanCache))
-            {
-                return Ok(zamanCache);
-            }
-            else
-            {
-                return NotFound("Zaman verisi bulunamadı.");
-            }
+            _memoryCache.TryGetValue("Zaman", out string zamanCache);
+
+            _memoryCache.TryGetValue("callback", out string callback);
+
+            return Ok(new { Zaman = zamanCache, Callback = callback });
         }
 
     }
