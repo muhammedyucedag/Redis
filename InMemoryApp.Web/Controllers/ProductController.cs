@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using InMemoryApp.Web.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace InMemoryApp.Web.Controllers
@@ -19,7 +20,7 @@ namespace InMemoryApp.Web.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpPost()]
+        [HttpPost("[action]")]
         public IActionResult Set()
         {
             MemoryCacheEntryOptions cacheOptions = new MemoryCacheEntryOptions();
@@ -41,6 +42,10 @@ namespace InMemoryApp.Web.Controllers
 
             _memoryCache.Set<string>("Zaman", DateTime.Now.ToString(), cacheOptions);
 
+            Product product = new Product { Id = Guid.NewGuid(), Name = "Kalem", Price = 200 };
+
+            _memoryCache.Set<Product>("Kalem", product);
+
             return Ok();
         }
 
@@ -49,14 +54,28 @@ namespace InMemoryApp.Web.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        [HttpGet()]
+        [HttpGet("[action]")]
         public IActionResult Get()
         {
             _memoryCache.TryGetValue("Zaman", out string zamanCache);
 
             _memoryCache.TryGetValue("callback", out string callback);
 
-            return Ok(new { Zaman = zamanCache, Callback = callback });
+            var product = _memoryCache.Get<Product>("Kalem");
+
+            var responseData = new
+            {
+                Zaman = zamanCache,
+                Callback = callback,
+                Product = new
+                {
+                    Id = product?.Id, 
+                    Name = product?.Name,
+                    Price = product?.Price
+                }
+            };
+
+            return Ok(responseData);
         }
 
     }
