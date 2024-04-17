@@ -1,0 +1,6 @@
+@IDistributedCacheRedisApp.Web_HostAddress = http://localhost:5285
+
+GET {{IDistributedCacheRedisApp.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
