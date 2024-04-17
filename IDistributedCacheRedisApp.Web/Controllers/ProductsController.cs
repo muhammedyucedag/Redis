@@ -77,5 +77,24 @@ namespace IDistributedCacheRedisApp.Web.Controllers
 
             return Ok("Data cached removed");
         }
+
+        [HttpGet("[action]")]
+        public IActionResult ImageCache()
+        {
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/pexels-kaique-rocha-21525766.jpg");
+
+            //ReadAllBytes metodu, belirtilen dosyanın tamamını bir byte dizisine okur ve bu byte dizisini döndürür. 
+            byte[] cachedImageBytes = System.IO.File.ReadAllBytes(path);
+            _distributedCache.Set("resim", cachedImageBytes);
+            return Ok();
+        }
+
+        [HttpGet("[action]")]
+        public IActionResult ImageUrl()
+        {
+            byte[] imageByte = _distributedCache.Get("resim");
+
+            return File(imageByte, "image/jpg");
+        }
     }
 }
