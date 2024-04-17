@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using IDistributedCacheRedisApp.Web.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace IDistributedCacheRedisApp.Web.Controllers
 {
@@ -13,6 +16,8 @@ namespace IDistributedCacheRedisApp.Web.Controllers
             _distributedCache = distributedCache;
         }
 
+        //Öneri! Byte'a dönüştürmek meşakatli bir iştir öneri şudur direk jsona çevirip get set ile okuyup kaydetmeniz olacaktır. 
+
         [HttpGet("[action]")]
         public async Task<IActionResult> Set()
         {
@@ -23,19 +28,45 @@ namespace IDistributedCacheRedisApp.Web.Controllers
             };
 
             // Cache'e veri yazılması
-            _distributedCache.SetString("name", "Muhammed", cacheOptions);
-            await _distributedCache.SetStringAsync("name", "Yücedağ", cacheOptions);
+            //_distributedCache.SetString("name", "Muhammed", cacheOptions);
+            //await _distributedCache.SetStringAsync("name", "Yücedağ", cacheOptions);
+
+            Product product = new Product { Id = Guid.NewGuid(), Name = "Kalem", Price = 200 };
+
+            string jsonProduct = JsonConvert.SerializeObject(product);
+
+            //Json olan veriyi byte dönüştürdük
+            Byte[] byteProduct = Encoding.UTF8.GetBytes(jsonProduct);
+
+            _distributedCache.Set($"Product:{product.Id}", byteProduct, cacheOptions);
+        
+            //await _distributedCache.SetStringAsync($"Product:{product.Id}", jsonProduct, cacheOptions);
 
             // HTTP 200 (OK) yanıtı
             return Ok("Data cached successfully."); // İsteğe göre mesajı değiştirebilirsiniz
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(Guid productId)
         {
-            string name = _distributedCache.GetString("name");
-            string nameAsync = await _distributedCache.GetStringAsync("name");
-            return Ok(nameAsync);
+            //string name = _distributedCache.GetString("name");
+            //string nameAsync = await _distributedCache.GetStringAsync("name");
+
+            Byte[] cachedProductBytes = await _distributedCache.GetAsync($"Product:{productId}");
+
+            // Cache'ten alınan verinin boş olup olmadığını kontrol etme
+            if (cachedProductBytes == null)
+                return NotFound("Product not found in cache.");
+
+            string cachedProduct = Encoding.UTF8.GetString(cachedProductBytes);
+
+            //string cachedProduct = await _distributedCache.GetStringAsync($"Product:{productId}");   
+
+            // JSON formatındaki verinin yeniden ürün nesnesine dönüştürülmesi
+            Product product = JsonConvert.DeserializeObject<Product>(cachedProduct);
+
+            // Alınan ürün nesnesini döndürme
+            return Ok(product);
         }
 
         [HttpGet("[action]")]
