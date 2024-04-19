@@ -6,23 +6,21 @@ public class RedisService
 {
     private readonly string _redisHost;
     private readonly string _redisPort;
-
     private ConnectionMultiplexer _redis;
 
-    public IDatabase redisDatabase { get; set; }
+    public IDatabase RedisDatabase { get; private set; }
 
     public RedisService(IConfiguration configuration)
     {
         _redisHost = configuration["Redis:Host"];
-        _redisHost = configuration["Redis:Port"];
+        _redisPort = configuration["Redis:Port"];
     }
 
-    public void Connect () 
+    public void Connect()
     {
-        var configSting = $"{_redisHost}:{_redisPort}";
-
-        _redis = ConnectionMultiplexer.Connect(configSting);
-
+        var configString = $"{_redisHost}:{_redisPort}";
+        _redis = ConnectionMultiplexer.Connect(configString);
+        RedisDatabase = _redis.GetDatabase();
     }
 
     public IDatabase GetRedisDb(int redisDb)
