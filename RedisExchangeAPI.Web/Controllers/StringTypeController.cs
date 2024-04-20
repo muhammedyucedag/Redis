@@ -48,8 +48,6 @@ namespace RedisExchangeAPI.Web.Controllers
             //    return Ok(stringGetRange.ToString());
             
                 return Ok(stringLength.ToString());         
-
-            return NotFound();
         }
     }
 }
