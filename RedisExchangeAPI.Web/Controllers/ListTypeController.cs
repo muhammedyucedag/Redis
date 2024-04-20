@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using RedisExchangeAPI.Web.Services;
 using StackExchange.Redis;
 
@@ -46,8 +45,16 @@ namespace RedisExchangeAPI.Web.Controllers
         public IActionResult DeleteData(string name)
         {
             // İsim listede varsa, listeden sil
-            db.ListRemoveAsync(listKey, name).Wait();
-            return Ok();
+            var existingData = db.ListRangeAsync(listKey).Result;
+            if (existingData.Contains(name))
+            {
+                db.ListRemoveAsync(listKey, name).Wait();
+                return Ok("Veri başarılı bir şekilde silindi.");
+            }
+            else
+            {
+                return NotFound("Veri bulunamadı."); // Veri bulunamadı durumunda 404 döndür
+            }
         }
     }
 }
