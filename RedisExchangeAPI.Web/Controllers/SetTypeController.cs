@@ -7,28 +7,21 @@ namespace RedisExchangeAPI.Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SetTypeController : ControllerBase
+    public class SetTypeController : BaseController
     {
-        private readonly RedisService _redisService;
-        private readonly IDatabase db;
+        public string key { get; set; } = "setNames";
 
-        private string listKey = "setnames";
-
-        public SetTypeController(RedisService redisService)
-        {
-            _redisService = redisService;
-            db = _redisService.GetRedisDb(0);
-
-        }
+        public SetTypeController(RedisService redisService) : base(redisService)
+        { }
 
         [HttpGet("[action]")]
         public IActionResult ListData()
         {
             HashSet<string> nameList = new HashSet<string>();
 
-            if (db.KeyExists(listKey))
+            if (db.KeyExists(key))
             {
-                db.SetMembers(listKey).ToList().ForEach(member =>
+                db.SetMembers(key).ToList().ForEach(member =>
                 {
                     nameList.Add(member.ToString());
                 });
@@ -40,10 +33,10 @@ namespace RedisExchangeAPI.Web.Controllers
         [HttpPost("[action]")]
         public IActionResult AddData(string name)
         {
-            if (!db.KeyExists(listKey))
-                db.KeyExpire(listKey, DateTime.Now.AddMinutes(1));
+            if (!db.KeyExists(key))
+                db.KeyExpire(key, DateTime.Now.AddMinutes(1));
 
-            db.SetAdd(listKey, name);
+            db.SetAdd(key, name);
 
             return Ok();
         }
@@ -53,7 +46,7 @@ namespace RedisExchangeAPI.Web.Controllers
         public async Task<IActionResult> DeleteDataAsync(string name)
         {
 
-            await db.SetRemoveAsync(listKey, name);
+            await db.SetRemoveAsync(key, name);
             return Ok();
         }
     }

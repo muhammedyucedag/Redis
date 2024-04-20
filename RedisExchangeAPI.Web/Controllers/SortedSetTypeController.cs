@@ -7,33 +7,27 @@ namespace RedisExchangeAPI.Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SortedSetTypeController : ControllerBase
+    public class SortedSetTypeController : BaseController
     {
-        private readonly RedisService _redisService;
-        private readonly IDatabase db;
+        public string key { get; set; } = "sortedsetnames";
 
-        private string listKey = "sortedsetnames";
-
-        public SortedSetTypeController(RedisService redisService)
-        {
-            _redisService = redisService;
-            db = _redisService.GetRedisDb(0);
-        }
+        public SortedSetTypeController(RedisService redisService) : base(redisService)
+        { }
 
         [HttpGet("[action]")]
         public IActionResult ListData()
         {
             HashSet<string> nameList = new HashSet<string>();
 
-            if (db.KeyExists(listKey))
+            if (db.KeyExists(key))
             {
                 //SortedSetScan metodu, Redis'teki sıralı kümenin tüm elemanlarını parçalar halinde almak ve işlemek için kullanılan bir iterasyon aracıdır.
-                //db.SortedSetScan(listKey).ToList().ForEach(member =>
+                //db.SortedSetScan(key).ToList().ForEach(member =>
                 //{
                 //    nameList.Add(member.ToString());
                 //});
 
-                db.SortedSetRangeByRank(listKey, order: Order.Descending).ToList().ForEach(x =>
+                db.SortedSetRangeByRank(key, order: Order.Descending).ToList().ForEach(x =>
                 {
                     nameList.Add(x.ToString());
                 });
@@ -45,9 +39,9 @@ namespace RedisExchangeAPI.Web.Controllers
         [HttpPost("[action]")]
         public IActionResult AddData(string name, int score)
         {
-            db.SortedSetAdd(listKey, name, score);
+            db.SortedSetAdd(key, name, score);
 
-            db.KeyExpire(listKey, DateTime.Now.AddMinutes(1));
+            db.KeyExpire(key, DateTime.Now.AddMinutes(1));
 
             return Ok();
         }
@@ -56,7 +50,7 @@ namespace RedisExchangeAPI.Web.Controllers
         public async Task<IActionResult> DeleteDataAsync(string name)
         {
 
-            await db.SortedSetRemoveAsync(listKey, name);
+            await db.SortedSetRemoveAsync(key, name);
             return Ok();
         }
     }

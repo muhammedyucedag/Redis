@@ -6,24 +6,17 @@ namespace RedisExchangeAPI.Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ListTypeController : ControllerBase
+    public class ListTypeController : BaseController
     {
-        private readonly RedisService _redisService;
-        private readonly IDatabase db;
+        public string key { get; set; } = "names";
 
-        private string listKey = "names";
-        
-        public ListTypeController(RedisService redisService)
-        {
-            _redisService = redisService;
-            db = _redisService.GetRedisDb(0);
-
-        }
+        public ListTypeController(RedisService redisService) : base(redisService)
+        {}
 
         [HttpPost("[action]")]
         public IActionResult AddData(string name)
         {
-            db.ListRightPush(listKey, name);
+            db.ListRightPush(key, name);
             return Ok();
         }
 
@@ -33,9 +26,9 @@ namespace RedisExchangeAPI.Web.Controllers
             List<string> nameList = new List<string>();
 
             // KeyExists bir sözlükte veya bir dizide bulunup bulunmadığını kontrol etmek için kullanılır.
-            if (db.KeyExists(listKey))
+            if (db.KeyExists(key))
             {
-                nameList = db.ListRange(listKey).Select(x => x.ToString()).ToList();
+                nameList = db.ListRange(key).Select(x => x.ToString()).ToList();
             }
 
             return Ok(nameList);
@@ -45,10 +38,10 @@ namespace RedisExchangeAPI.Web.Controllers
         public IActionResult DeleteData(string name)
         {
             // İsim listede varsa, listeden sil
-            var existingData = db.ListRangeAsync(listKey).Result;
+            var existingData = db.ListRangeAsync(key).Result;
             if (existingData.Contains(name))
             {
-                db.ListRemoveAsync(listKey, name).Wait();
+                db.ListRemoveAsync(key, name).Wait();
                 return Ok("Veri başarılı bir şekilde silindi.");
             }
             else

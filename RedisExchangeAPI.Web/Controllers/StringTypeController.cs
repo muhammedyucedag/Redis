@@ -1,21 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RedisExchangeAPI.Web.Services;
-using StackExchange.Redis;
 
 namespace RedisExchangeAPI.Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class StringTypeController : ControllerBase
+    public class StringTypeController : BaseController
     {
-        private readonly RedisService _redisService;
-        private readonly IDatabase db;
-        public StringTypeController(RedisService redisService)
-        {
-            _redisService = redisService;
-            db = _redisService.GetRedisDb(0);
-
-        }
+        public StringTypeController(RedisService redisService) : base(redisService)
+        {}
 
         [HttpGet("[action]")]
         public IActionResult Set()
