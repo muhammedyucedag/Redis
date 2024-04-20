@@ -7,18 +7,17 @@ namespace RedisExchangeAPI.Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class SetTypeController : ControllerBase
+    public class SortedSetTypeController : ControllerBase
     {
         private readonly RedisService _redisService;
         private readonly IDatabase db;
 
-        private string listKey = "setnames";
+        private string listKey = "sortedsetnames";
 
-        public SetTypeController(RedisService redisService)
+        public SortedSetTypeController(RedisService redisService)
         {
             _redisService = redisService;
             db = _redisService.GetRedisDb(0);
-
         }
 
         [HttpGet("[action]")]
@@ -28,9 +27,15 @@ namespace RedisExchangeAPI.Web.Controllers
 
             if (db.KeyExists(listKey))
             {
-                db.SetMembers(listKey).ToList().ForEach(member =>
+                //SortedSetScan metodu, Redis'teki sıralı kümenin tüm elemanlarını parçalar halinde almak ve işlemek için kullanılan bir iterasyon aracıdır.
+                //db.SortedSetScan(listKey).ToList().ForEach(member =>
+                //{
+                //    nameList.Add(member.ToString());
+                //});
+
+                db.SortedSetRangeByRank(listKey, order: Order.Descending).ToList().ForEach(x =>
                 {
-                    nameList.Add(member.ToString());
+                    nameList.Add(x.ToString());
                 });
             }
 
@@ -38,22 +43,20 @@ namespace RedisExchangeAPI.Web.Controllers
         }
 
         [HttpPost("[action]")]
-        public IActionResult AddData(string name)
+        public IActionResult AddData(string name, int score)
         {
-            if (!db.KeyExists(listKey))
-                db.KeyExpire(listKey, DateTime.Now.AddMinutes(1));
+            db.SortedSetAdd(listKey, name, score);
 
-            db.SetAdd(listKey, name);
+            db.KeyExpire(listKey, DateTime.Now.AddMinutes(1));
 
             return Ok();
         }
-
 
         [HttpGet("[action]")]
         public async Task<IActionResult> DeleteDataAsync(string name)
         {
 
-            await db.SetRemoveAsync(listKey, name);
+            await db.SortedSetRemoveAsync(listKey, name);
             return Ok();
         }
     }
